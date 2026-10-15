@@ -9,7 +9,7 @@ variables:
   START_TASK: ""
   INSTALL_NV_JP: "1" #enable install nvidia-jetpack by default
   BUILD_QSPI_IMG: "1" #enable image build for qspi flash by default
-  JETPACKVER: "7.2.0" # TODO: confirm exact JetPack version for L4T r39.2.1
+  JETPACKVER: "7.2.1" # NVIDIA L4T R39.2.1
   JETSONVER: "39.2.1"
   ROOTFS_NAME: "Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2"
   UPDATE_DRV_DEPEND: "1"

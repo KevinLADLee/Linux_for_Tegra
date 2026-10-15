@@ -10,7 +10,7 @@
 
 # Linux_for_Tegra
 
-This software is the source code of the default shipping firmware of Seeed Jetson reComputer, reServer and other products. It is built on NVIDIA JetPack 7.2.1 (L4T R39.2.1). On this basis, additional hardware drivers and boards are added, which is convenient for users to develop their own software and build other Jetson systems, such as Yocto, buildroot, etc.
+This fork ports Seeed's board and driver changes to NVIDIA JetPack 7.2.1 (L4T R39.2.1). Offline build validation targets reComputer Mini J40 with Orin NX 16GB. Other inherited Seeed board profiles are retained but have not been validated on hardware by this fork.
 
 ## Supported hardware
 
@@ -24,14 +24,14 @@ This software is the source code of the default shipping firmware of Seeed Jetso
 
 1. Download and prepare the Linux_for_Tegra source code
 ```
-wget https://developer.nvidia.com/downloads/embedded/l4t/r39_release_v2.1/release/Jetson_Linux_r39.2.1_aarch64.tbz2
-tar xf Jetson_Linux_r39.2.1_aarch64.tbz2
+wget https://developer.download.nvidia.com/embedded/L4T/r39_Release_v2.1/release/Jetson_Linux_R39.2.1_aarch64.tbz2
+tar xf Jetson_Linux_R39.2.1_aarch64.tbz2
 ```
 
 2. Download and prepare sample root file system
 ```
-wget https://developer.nvidia.com/downloads/embedded/l4t/r39_release_v2.1/release/Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2
-sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2 -C Linux_for_Tegra/rootfs/
+wget https://developer.download.nvidia.com/embedded/L4T/r39_Release_v2.1/release/Tegra_Linux_Sample-Root-Filesystem_R39.2.1_aarch64.tbz2
+sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_R39.2.1_aarch64.tbz2 -C Linux_for_Tegra/rootfs/
 ```
 
 3. sync the source code for compiling
@@ -44,7 +44,7 @@ cd Linux_for_Tegra/source/
 ```
 cd ../..
 mkdir -p github/Linux_for_Tegra
-git clone https://github.com/Seeed-Studio/Linux_for_Tegra.git -b r39.2.1 --depth=1 github/Linux_for_Tegra
+git clone https://github.com/KevinLADLee/Linux_for_Tegra.git -b r39.2.1-j40mini --depth=1 github/Linux_for_Tegra
 cp -r github/Linux_for_Tegra/* Linux_for_Tegra/
 ```
 
@@ -247,4 +247,4 @@ Note that **192.168.1.77** is the internal server of Seeed, which functions as a
 
 ## Summary
 
-This software retains the usage and features of the original `Linux_for_Tegra` to the greatest extent, and adds our own BSP and board on this basis. It is designed for NVIDIA JetPack 7.2.1 (L4T R39.2.1) with support for Jetson Orin and Jetson Thor platforms.
+This software retains the usage and features of the original `Linux_for_Tegra` to the greatest extent, and adds our own BSP and board on this basis. It targets NVIDIA JetPack 7.2.1 (L4T R39.2.1); this fork's offline validation scope is J40 Mini / Orin NX 16GB, with hardware validation still pending.
