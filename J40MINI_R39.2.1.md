@@ -59,8 +59,10 @@ DTB is `tegra234-bpmp-3767-0000-3768-super.dtb`.
 `39.2.1-20260806224157` and JetPack `7.2.1-b49`, including the dependency
 versions resolved from NVIDIA's repository metadata. Install it into the
 image's `/etc/apt/preferences.d` before installing JetPack. The local image
-builder additionally holds the installed `nvidia-l4t-*` packages and checks
-that installing JetPack does not replace boot-chain packages.
+builder additionally holds the installed `nvidia-l4t-*` packages. Full JetPack
+SDK preinstallation is optional and is disabled by default; CUDA, TensorRT and
+the other SDK libraries are not required to generate a bootable BSP image.
+The optional SDK installation path checks that boot-chain packages are preserved.
 
 This branch does not add J40 Mini to NVIDIA's official OTA payloads. Updating
 or reinstalling the stock bootloader/kernel packages remains a separate
