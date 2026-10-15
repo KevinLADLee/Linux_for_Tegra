@@ -14,3 +14,11 @@
 /bootloader/rcm_*
 /headless-profile.json
 *.log
+
+# Private standalone workflow state (never source code).
+/tools/j40mini/workflow/work
+/tools/j40mini/workflow/downloads
+/tools/j40mini/workflow/analysis
+/tools/j40mini/workflow/sources
+__pycache__/
+*.py[cod]

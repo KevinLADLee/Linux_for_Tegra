@@ -1,4 +1,4 @@
-> **Unofficial R39.2.1 port.** See [J40 Mini build and validation](J40MINI_R39.2.1.md). Based on Seeed commit `df17ed28201645fcaeb6c8e6fb82a0b4592faefb`; this branch is not a Seeed release. Hardware validation is pending.
+> **Unofficial R39.2.1 port.** See [J40 Mini build and validation](J40MINI_R39.2.1.md). Based on Seeed commit `df17ed28201645fcaeb6c8e6fb82a0b4592faefb`; this branch is not a Seeed release. One Orin NX 16GB / J40 Mini has passed flash, boot, Super 40W and network configuration checks; full peripheral acceptance remains pending. See the [host workflow](tools/j40mini/workflow/README.md).
 
 - [Linux_for_Tegra](#Linux_for_Tegra)
     - [Supported hardware](#supported-hardware)
@@ -10,7 +10,7 @@
 
 # Linux_for_Tegra
 
-This fork ports Seeed's board and driver changes to NVIDIA JetPack 7.2.1 (L4T R39.2.1). Offline build validation targets reComputer Mini J40 with Orin NX 16GB. Other inherited Seeed board profiles are retained but have not been validated on hardware by this fork.
+This fork ports Seeed's board and driver changes to NVIDIA JetPack 7.2.1 (L4T R39.2.1). Build and single-device boot/configuration validation target reComputer Mini J40 with Orin NX 16GB. Other inherited Seeed board profiles are retained but have not been validated on hardware by this fork.
 
 ## Supported hardware
 

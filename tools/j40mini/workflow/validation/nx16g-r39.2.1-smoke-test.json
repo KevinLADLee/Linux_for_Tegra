@@ -1,0 +1,53 @@
+{
+  "verified_at": "2026-10-15T14:31:13.572919+00:00",
+  "scope": "Single Orin NX 16GB (P3767-0000) on Seeed J40 Mini; boot and configuration checks, not full peripheral acceptance.",
+  "bsp_source_commit": "b6a5a4141399d04af583f663b6c08fe2e99dd76f",
+  "l4t": "39.2.1",
+  "qspi": "39.2.1",
+  "kernel_release": "6.8.12-1021-tegra",
+  "compiled_modules_matched": 1555,
+  "kernel_image_sha256": "9a0f2d48bc01dde1b693508a8cd599cbc5a180c8292672d5db245a6fec352707",
+  "target_dtb_sha256": "ba097e348be509eeb0d90bd230731b38a77a529e43d1fada0f1ed5ce551a37be",
+  "super_power_config": "nvpmodel_p3767_0000_super.conf",
+  "active_power_mode": {
+    "name": "40W",
+    "id": 4
+  },
+  "additional_power_mode": {
+    "name": "MAXN_SUPER",
+    "id": 0
+  },
+  "wired_profile_example": {
+    "interface": "enP8p1s0",
+    "address": "192.168.123.18/24",
+    "autoconnect": true,
+    "never_default": true,
+    "gateway": null
+  },
+  "app_size_bytes": 68719476736,
+  "package_file_count": 45,
+  "jetpack_sdk_preinstalled": false,
+  "checks": {
+    "l4t_r39_2_1": true,
+    "bsp_packages_consistent": true,
+    "qspi_version_r39_2_1": true,
+    "kernel_release": true,
+    "kernel_image_matches": true,
+    "dtb_matches": true,
+    "all_compiled_modules_match": true,
+    "super_device_tree": true,
+    "super_power_config": true,
+    "default_super_40w_mode": true,
+    "wired_ipv4_active": true,
+    "wired_persistent_profile": true,
+    "wired_no_default_route": true,
+    "root_on_nvme": true,
+    "headless_login": true,
+    "dpkg_clean": true,
+    "jetpack_sdk_not_preinstalled": true
+  },
+  "physically_flashed": true,
+  "installed_system_verified": true,
+  "full_peripheral_acceptance_performed": false,
+  "publication": "Sanitized summary; credentials, ECID, serials, MAC addresses, host keys, local paths and images excluded."
+}

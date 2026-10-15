@@ -87,10 +87,21 @@ DT overlays. Its FAB=300 callback is a test input, not a hardware measurement.
 
 Rootfs assembly and QSPI/NVMe package validation are recorded separately in
 the image workspace. A generated `--no-flash` package is not proof of a
-successful hardware boot. This port has not been flashed or tested on hardware.
-No OTA or hardware acceptance is claimed.
+successful hardware boot. On 2026-10-15, a package built from BSP source revision
+`b6a5a4141399d04af583f663b6c08fe2e99dd76f` was flashed to one Orin NX 16GB /
+J40 Mini. Actual QSPI/L4T R39.2.1, matching kernel/DTB/1555 modules, Super 40W
+and the persistent robot Ethernet profile passed boot/configuration checks.
+See the [sanitized result](tools/j40mini/workflow/validation/nx16g-r39.2.1-smoke-test.json).
+Full peripheral acceptance, other boards and OTA updates remain unvalidated.
 
 For offline image generation use `tools/kernel_flash/l4t_initrd_flash.sh`
 with **`--no-flash`**, a measured-capacity NVMe XML and the measured board/chip
 environment. Do not use `--flash-only`, `--direct` or a guessed board identity
 when preparing an offline package.
+
+## Reusable host workflow
+
+The [standalone workflow](tools/j40mini/workflow/README.md) packages source
+preparation, kernel staging, headless rootfs assembly, Recovery measurement,
+no-flash image generation, explicit flashing and read-only SSH verification.
+SDK preinstallation is opt-in. Generated state and credentials are ignored.
