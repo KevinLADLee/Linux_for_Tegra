@@ -74,6 +74,15 @@ staged modules are AArch64 ELF with the matching `6.8.12-1021-tegra` vermagic.
 The target DTB, Super board callback, five default DT overlays and all 23
 initrd module-list entries pass offline checks.
 
+Re-run the portable compile/ABI/DTB checks after building and installing:
+
+```bash
+python3 tools/j40mini/verify_build.py --staged-rootfs rootfs
+```
+
+The checker only reads local files and uses a temporary directory for merging
+DT overlays. Its FAB=300 callback is a test input, not a hardware measurement.
+
 Rootfs assembly and QSPI/NVMe package validation are recorded separately in
 the image workspace. A generated `--no-flash` package is not proof of a
 successful hardware boot. This port has not been flashed or tested on hardware.
