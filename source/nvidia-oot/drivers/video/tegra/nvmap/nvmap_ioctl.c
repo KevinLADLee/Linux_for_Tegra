@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2011-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2011-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * User-space interface to nvmap
  */
@@ -20,6 +20,7 @@
 #include <linux/highmem.h>
 #include <linux/mm.h>
 #include <linux/mman.h>
+#include <linux/overflow.h>
 
 #include <asm/io.h>
 #include <asm/memory.h>
@@ -1329,6 +1330,15 @@ int nvmap_ioctl_get_fd_from_list(struct file *filp, void __user *arg)
 	if (!op.handles || !op.num_handles
 		 || !op.size || op.num_handles > U32_MAX / sizeof(u32)
 		 || op.offset > (U64_MAX - op.size))
+		return -EINVAL;
+
+	/*
+	 * The offset must be page-aligned. The destination handle is sized to
+	 * PAGE_ALIGN(size), so a non-page-aligned offset makes the page copy
+	 * span one more page than the destination pages[] array can hold,
+	 * causing a kernel-heap out-of-bounds write.
+	 */
+	if (!IS_ALIGNED(op.offset, PAGE_SIZE))
 		return -EINVAL;
 
 	hrange.offs = op.offset;

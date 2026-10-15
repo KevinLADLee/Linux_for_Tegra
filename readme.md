@@ -1,3 +1,5 @@
+> **Unofficial R39.2.1 port.** See [J40 Mini build and validation](J40MINI_R39.2.1.md). Based on Seeed commit `df17ed28201645fcaeb6c8e6fb82a0b4592faefb`; this branch is not a Seeed release. Hardware validation is pending.
+
 - [Linux_for_Tegra](#Linux_for_Tegra)
     - [Supported hardware](#supported-hardware)
     - [Getting Started](#getting-started)
@@ -8,7 +10,7 @@
 
 # Linux_for_Tegra
 
-This software is the source code of the default shipping firmware of Seeed Jetson reComputer, reServer and other products. It is built on NVIDIA JetPack 7.2 (L4T R39.2.0). On this basis, additional hardware drivers and boards are added, which is convenient for users to develop their own software and build other Jetson systems, such as Yocto, buildroot, etc.
+This software is the source code of the default shipping firmware of Seeed Jetson reComputer, reServer and other products. It is built on NVIDIA JetPack 7.2.1 (L4T R39.2.1). On this basis, additional hardware drivers and boards are added, which is convenient for users to develop their own software and build other Jetson systems, such as Yocto, buildroot, etc.
 
 ## Supported hardware
 
@@ -22,27 +24,27 @@ This software is the source code of the default shipping firmware of Seeed Jetso
 
 1. Download and prepare the Linux_for_Tegra source code
 ```
-wget https://developer.nvidia.com/downloads/embedded/l4t/r39_release_v2.0/release/Jetson_Linux_r39.2.0_aarch64.tbz2
-tar xf Jetson_Linux_r39.2.0_aarch64.tbz2
+wget https://developer.nvidia.com/downloads/embedded/l4t/r39_release_v2.1/release/Jetson_Linux_r39.2.1_aarch64.tbz2
+tar xf Jetson_Linux_r39.2.1_aarch64.tbz2
 ```
 
 2. Download and prepare sample root file system
 ```
-wget https://developer.nvidia.com/downloads/embedded/l4t/r39_release_v2.0/release/Tegra_Linux_Sample-Root-Filesystem_r39.2.0_aarch64.tbz2
-sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_r39.2.0_aarch64.tbz2 -C Linux_for_Tegra/rootfs/
+wget https://developer.nvidia.com/downloads/embedded/l4t/r39_release_v2.1/release/Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2
+sudo tar xpf Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2 -C Linux_for_Tegra/rootfs/
 ```
 
 3. sync the source code for compiling
 ```
 cd Linux_for_Tegra/source/
-./source_sync.sh -t jetson_39.2.0
+./source_sync.sh -t jetson_39.2.1
 ```
 
 4. clone this repo and overwrite the original source code
 ```
 cd ../..
 mkdir -p github/Linux_for_Tegra
-git clone https://github.com/Seeed-Studio/Linux_for_Tegra.git -b r39.2.0 --depth=1 github/Linux_for_Tegra
+git clone https://github.com/Seeed-Studio/Linux_for_Tegra.git -b r39.2.1 --depth=1 github/Linux_for_Tegra
 cp -r github/Linux_for_Tegra/* Linux_for_Tegra/
 ```
 
@@ -153,7 +155,7 @@ The configuration files used for Seeed products. For detailed correspondence, se
 
 ### CI/CD
 
-Seeed's Jetson products based on JetPack 7.2 use SSD as system storage, so the firmware supports SSD boot on both Orin and Thor platforms. Because of the particularity of SSD burning, we tried to use NVIDIA's official documentation to mass produce via USB on the production line, but the production efficiency was extremely low and could not meet the needs of mass production. After our research, two-stage burning using spiflash + ssd is the most appropriate way. The steps for burning firmware in Seeed's current Jetson production process are as follows:
+Seeed's Jetson products based on JetPack 7.2.1 use SSD as system storage, so the firmware supports SSD boot on both Orin and Thor platforms. Because of the particularity of SSD burning, we tried to use NVIDIA's official documentation to mass produce via USB on the production line, but the production efficiency was extremely low and could not meet the needs of mass production. After our research, two-stage burning using spiflash + ssd is the most appropriate way. The steps for burning firmware in Seeed's current Jetson production process are as follows:
 
 1. Burn the smallest qspiflash image
 2. Install the SSD (**SSD has passed the professional SSD cloning service and burned the SSD image**)
@@ -188,8 +190,8 @@ jetson-agx-thor-devkit:
     script:
          - id
          - export DATE_STR=$(TZ='Asia/Hong_Kong' date +%Y-%m-%d)
-         - wget http://192.168.1.77/jetson/Tegra_Linux_Sample-Root-Filesystem_r39.2.0_aarch64.tbz2 -q
-         - tar xpf Tegra_Linux_Sample-Root-Filesystem_r39.2.0_aarch64.tbz2 -C rootfs
+         - wget http://192.168.1.77/jetson/Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2 -q
+         - tar xpf Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2 -C rootfs
          - if [ "$BOARDID" == "3834" ]; then export SOC=t264; else export SOC=t234; fi
          - if [ "$BOARDID" == "3834" ]; then ./apply_binaries.sh --openrm; else ./apply_binaries.sh; fi
 ```
@@ -245,4 +247,4 @@ Note that **192.168.1.77** is the internal server of Seeed, which functions as a
 
 ## Summary
 
-This software retains the usage and features of the original `Linux_for_Tegra` to the greatest extent, and adds our own BSP and board on this basis. It is designed for NVIDIA JetPack 7.2 (L4T R39.2.0) with support for Jetson Orin and Jetson Thor platforms.
+This software retains the usage and features of the original `Linux_for_Tegra` to the greatest extent, and adds our own BSP and board on this basis. It is designed for NVIDIA JetPack 7.2.1 (L4T R39.2.1) with support for Jetson Orin and Jetson Thor platforms.

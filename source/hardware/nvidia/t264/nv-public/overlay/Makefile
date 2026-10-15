@@ -41,6 +41,8 @@ dtbo-y += tegra264-p4071-0000+p3834-xxxx-dynamic.dtbo
 dtbo-y += tegra264-ufs-provision.dtbo
 dtbo-y += tegra264-p4071-camera-maxim-3g-overlay.dtbo
 dtbo-y += tegra264-p4071-camera-maxim-6g-overlay.dtbo
+dtbo-y += tegra264-p4071-0000+p3834-0008-as-p5767-0000.dtbo
+
 ifneq ($(dtb-y),)
 dtb-y := $(addprefix $(makefile-path)/,$(dtb-y))
 endif

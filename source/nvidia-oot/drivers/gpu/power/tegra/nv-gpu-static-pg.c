@@ -18,16 +18,38 @@
 #include <soc/tegra/bpmp-abi.h>
 
 #define TEGRA264_STRAP_NV_FUSE_CTRL_OPT_GPU		1U
-#define GPU_PG_MASK_PARAM_DEFAULT 0xFFFFFFFF
+#define TEGRA264_STRAP_NV_FUSE_CTRL_OPT_NVDEC		2U
+#define TEGRA264_STRAP_NV_FUSE_CTRL_OPT_NVENC		3U
+#define TEGRA264_STRAP_NV_FUSE_CTRL_OPT_OFA		4U
+#define TEGRA264_STRAP_NV_FUSE_CTRL_OPT_NVJPG		5U
 
-/* module parameter for T264 GPU PG mask */
-uint gpu_pg_mask_param = GPU_PG_MASK_PARAM_DEFAULT;
+#define STRAP_MASK_PARAM_DEFAULT 0xFFFFFFFF
+
+/* module parameters for T264 static power-gating straps */
+uint gpu_pg_mask_param = STRAP_MASK_PARAM_DEFAULT;
 module_param(gpu_pg_mask_param, uint, 0664);
 MODULE_PARM_DESC(gpu_pg_mask_param, "T264 GPU GPC/TPC/FBP Power-Gating mask");
+
+static uint nvdec_pg_mask_param = STRAP_MASK_PARAM_DEFAULT;
+module_param(nvdec_pg_mask_param, uint, 0664);
+MODULE_PARM_DESC(nvdec_pg_mask_param, "T264 NVDEC Power-Gating mask");
+
+static uint nvenc_pg_mask_param = STRAP_MASK_PARAM_DEFAULT;
+module_param(nvenc_pg_mask_param, uint, 0664);
+MODULE_PARM_DESC(nvenc_pg_mask_param, "T264 NVENC Power-Gating mask");
+
+static uint ofa_pg_mask_param = STRAP_MASK_PARAM_DEFAULT;
+module_param(ofa_pg_mask_param, uint, 0664);
+MODULE_PARM_DESC(ofa_pg_mask_param, "T264 OFA Power-Gating mask");
+
+static uint nvjpg_pg_mask_param = STRAP_MASK_PARAM_DEFAULT;
+module_param(nvjpg_pg_mask_param, uint, 0664);
+MODULE_PARM_DESC(nvjpg_pg_mask_param, "T264 NVJPG Power-Gating mask");
 
 struct tegra_gpu_pg_profile {
 	struct kobj_attribute attr;
 	uint32_t gpu_pg_mask;
+	uint32_t strap_id;
 
 	/* lock to protect the gpu_pg_mask */
 	struct mutex lock;
@@ -35,18 +57,36 @@ struct tegra_gpu_pg_profile {
 	struct tegra_bpmp *gpu_pg_bpmp;
 };
 
+/* Static descriptor table – one entry per supported strap. */
+struct tegra_strap_desc {
+	uint32_t strap_id;
+	const char *sysfs_name;
+	uint *param;
+};
+
+static const struct tegra_strap_desc tegra264_strap_table[] = {
+	{ TEGRA264_STRAP_NV_FUSE_CTRL_OPT_GPU,   "gpu_pg_mask",   &gpu_pg_mask_param   },
+	{ TEGRA264_STRAP_NV_FUSE_CTRL_OPT_NVDEC, "nvdec_pg_mask", &nvdec_pg_mask_param },
+	{ TEGRA264_STRAP_NV_FUSE_CTRL_OPT_NVENC, "nvenc_pg_mask", &nvenc_pg_mask_param },
+	{ TEGRA264_STRAP_NV_FUSE_CTRL_OPT_OFA,   "ofa_pg_mask",   &ofa_pg_mask_param   },
+	{ TEGRA264_STRAP_NV_FUSE_CTRL_OPT_NVJPG, "nvjpg_pg_mask", &nvjpg_pg_mask_param },
+};
+
+#define NUM_TEGRA264_STRAPS ARRAY_SIZE(tegra264_strap_table)
+
 struct tegra_gpu_pg_profile_drv_data {
 	struct kobject *gpu_static_pg_kobject;
 	struct tegra_bpmp *gpu_pg_bpmp;
-	struct tegra_gpu_pg_profile *gpu_pg_profile;
+	struct tegra_gpu_pg_profile *gpu_pg_profile; /* array of NUM_TEGRA264_STRAPS */
 };
 
-static bool is_gpu_pg_mask_param_set(void)
+static bool is_strap_param_set(uint param)
 {
-	return gpu_pg_mask_param != GPU_PG_MASK_PARAM_DEFAULT;
+	return param != STRAP_MASK_PARAM_DEFAULT;
 }
 
-static ssize_t bpmp_set_gpu_pg_mask(struct tegra_bpmp *bpmp, uint32_t gpu_pg_mask)
+static ssize_t bpmp_set_gpu_pg_mask(struct tegra_bpmp *bpmp, uint32_t strap_id,
+				     uint32_t gpu_pg_mask)
 {
 	struct mrq_strap_request req = { 0 };
 	struct tegra_bpmp_message msg;
@@ -54,7 +94,7 @@ static ssize_t bpmp_set_gpu_pg_mask(struct tegra_bpmp *bpmp, uint32_t gpu_pg_mas
 
 	memset(&req, 0, sizeof(req));
 	req.cmd = STRAP_SET;
-	req.id = TEGRA264_STRAP_NV_FUSE_CTRL_OPT_GPU;
+	req.id = strap_id;
 	req.value = gpu_pg_mask;
 
 	memset(&msg, 0, sizeof(struct tegra_bpmp_message));
@@ -94,9 +134,11 @@ static ssize_t gpu_pg_mask_store(struct kobject *kobj, struct kobj_attribute *at
 		return ret;
 
 	mutex_lock(&gpu_pg_profile->lock);
-	ret = bpmp_set_gpu_pg_mask(gpu_pg_profile->gpu_pg_bpmp, gpu_pg_mask);
+	ret = bpmp_set_gpu_pg_mask(gpu_pg_profile->gpu_pg_bpmp, gpu_pg_profile->strap_id,
+				   gpu_pg_mask);
 	if (ret) {
-		pr_warn("Failed to send the BPMP MRQ for GPU PG mask\n");
+		pr_warn("Failed to send BPMP MRQ for %s (strap %u)\n",
+			gpu_pg_profile->attr.attr.name, gpu_pg_profile->strap_id);
 		mutex_unlock(&gpu_pg_profile->lock);
 		return ret;
 	} else {
@@ -117,93 +159,99 @@ MODULE_DEVICE_TABLE(of, of_nv_gpu_static_pg_match);
 static int gpu_static_pg_init(struct platform_device *pdev)
 {
 	struct tegra_gpu_pg_profile_drv_data *gpu_pg_profile_drv_data = platform_get_drvdata(pdev);
-	struct tegra_gpu_pg_profile *gpu_pg_profile;
-	int ret = 0;
+	struct tegra_gpu_pg_profile *profiles;
+	int i, ret = 0;
 
-	/* Allocate memory for gpu_pg_profile */
-	gpu_pg_profile = devm_kzalloc(&pdev->dev, sizeof(*gpu_pg_profile), GFP_KERNEL);
-	if (!gpu_pg_profile) {
+	profiles = devm_kcalloc(&pdev->dev, NUM_TEGRA264_STRAPS, sizeof(*profiles), GFP_KERNEL);
+	if (!profiles) {
 		dev_err(&pdev->dev, "Failed to allocate gpu_pg_profile!\n");
 		return -ENOMEM;
 	}
 
-	mutex_init(&gpu_pg_profile->lock);
+	for (i = 0; i < NUM_TEGRA264_STRAPS; i++) {
+		const struct tegra_strap_desc *desc = &tegra264_strap_table[i];
+		struct tegra_gpu_pg_profile *p = &profiles[i];
 
-	/* Send the GPU PG mask to BPMP if module param is set */
-	mutex_lock(&gpu_pg_profile->lock);
+		p->strap_id = desc->strap_id;
+		p->gpu_pg_bpmp = gpu_pg_profile_drv_data->gpu_pg_bpmp;
+		mutex_init(&p->lock);
 
-	if (is_gpu_pg_mask_param_set()) {
-		dev_info(&pdev->dev, "Sending GPU PG mask via BPMP MRQ, "
-			"GPU PG mask param = %u.\n", gpu_pg_mask_param);
-		ret = bpmp_set_gpu_pg_mask(gpu_pg_profile_drv_data->gpu_pg_bpmp, gpu_pg_mask_param);
-		if (ret) {
-			dev_err(&pdev->dev, "Failed to send the BPMP MRQ for GPU PG mask param.\n");
-			mutex_unlock(&gpu_pg_profile->lock);
+		/* Send the PG mask to BPMP if the module param is set */
+		if (is_strap_param_set(*desc->param)) {
+			dev_info(&pdev->dev, "Sending %s via BPMP MRQ, value = %u.\n",
+				 desc->sysfs_name, *desc->param);
+			mutex_lock(&p->lock);
+			ret = bpmp_set_gpu_pg_mask(gpu_pg_profile_drv_data->gpu_pg_bpmp,
+						   p->strap_id, *desc->param);
+			mutex_unlock(&p->lock);
+			if (ret) {
+				dev_err(&pdev->dev,
+					"Failed to send the BPMP MRQ for %s param.\n",
+					desc->sysfs_name);
+				ret = -EINVAL;
+				mutex_destroy(&p->lock);
+				goto err_cleanup;
+			}
+			p->gpu_pg_mask = *desc->param;
+		}
+
+		p->attr.attr.name = kstrdup_const(desc->sysfs_name, GFP_KERNEL);
+		if (!p->attr.attr.name) {
+			dev_warn(&pdev->dev, "Couldn't allocate memory for %s\n", desc->sysfs_name);
+			ret = -ENOMEM;
+			mutex_destroy(&p->lock);
+			goto err_cleanup;
+		}
+
+		sysfs_attr_init(&p->attr.attr);
+		p->attr.attr.mode = 0664;
+		p->attr.show = gpu_pg_mask_show;
+		p->attr.store = gpu_pg_mask_store;
+		if (sysfs_create_file(gpu_pg_profile_drv_data->gpu_static_pg_kobject,
+				      &p->attr.attr)) {
+			dev_warn(&pdev->dev, "Couldn't create %s sysfs\n", desc->sysfs_name);
+			kfree_const(p->attr.attr.name);
 			ret = -EINVAL;
-			goto err_free_gpu_pg_profile;
-		} else {
-			gpu_pg_profile->gpu_pg_mask = gpu_pg_mask_param;
+			mutex_destroy(&p->lock);
+			goto err_cleanup;
 		}
 	}
-	mutex_unlock(&gpu_pg_profile->lock);
 
-	gpu_pg_profile->gpu_pg_bpmp = gpu_pg_profile_drv_data->gpu_pg_bpmp;
-	gpu_pg_profile_drv_data->gpu_pg_profile = gpu_pg_profile;
-
-	/* Create sysfs interface for gpu pg mask */
-	gpu_pg_profile->attr.attr.name = kstrdup_const("gpu_pg_mask", GFP_KERNEL);
-	if (!gpu_pg_profile->attr.attr.name) {
-		dev_warn(&pdev->dev, "Couldn't allocate memory for gpu_pg_mask\n");
-		ret = -ENOMEM;
-		goto err_free_gpu_pg_profile;
-	}
-
-	sysfs_attr_init(&gpu_pg_profile->attr.attr);
-	gpu_pg_profile->attr.attr.mode = 0664;
-	gpu_pg_profile->attr.show = gpu_pg_mask_show;
-	gpu_pg_profile->attr.store = gpu_pg_mask_store;
-	if (sysfs_create_file(gpu_pg_profile_drv_data->gpu_static_pg_kobject,
-		&(gpu_pg_profile->attr.attr))) {
-		dev_warn(&pdev->dev, "Couldn't create gpu_pg_mask sysfs\n");
-
-		kfree_const(gpu_pg_profile->attr.attr.name);
-		ret = -EINVAL;
-		goto err_free_gpu_pg_profile;
-	}
-
+	gpu_pg_profile_drv_data->gpu_pg_profile = profiles;
 	return 0;
 
-err_free_gpu_pg_profile:
-	mutex_destroy(&gpu_pg_profile->lock);
-	devm_kfree(&pdev->dev, gpu_pg_profile);
-	gpu_pg_profile = NULL;
-
+err_cleanup:
+	while (--i >= 0) {
+		sysfs_remove_file(gpu_pg_profile_drv_data->gpu_static_pg_kobject,
+				  &profiles[i].attr.attr);
+		kfree_const(profiles[i].attr.attr.name);
+		mutex_destroy(&profiles[i].lock);
+	}
+	devm_kfree(&pdev->dev, profiles);
 	return ret;
 }
 
 static void gpu_static_pg_deinit(struct platform_device *pdev)
 {
 	struct tegra_gpu_pg_profile_drv_data *gpu_pg_profile_drv_data;
-	struct tegra_gpu_pg_profile *gpu_pg_profile;
+	struct tegra_gpu_pg_profile *profiles;
+	int i;
 
 	gpu_pg_profile_drv_data = platform_get_drvdata(pdev);
-	gpu_pg_profile = gpu_pg_profile_drv_data->gpu_pg_profile;
+	profiles = gpu_pg_profile_drv_data->gpu_pg_profile;
 
-	if (!gpu_pg_profile)
+	if (!profiles)
 		return;
 
-	sysfs_remove_file(gpu_pg_profile_drv_data->gpu_static_pg_kobject, &(gpu_pg_profile->attr.attr));
+	for (i = 0; i < NUM_TEGRA264_STRAPS; i++) {
+		sysfs_remove_file(gpu_pg_profile_drv_data->gpu_static_pg_kobject,
+				  &profiles[i].attr.attr);
+		kfree_const(profiles[i].attr.attr.name);
+		mutex_destroy(&profiles[i].lock);
+	}
 
-	/* release gpu_pg_profile if it is allocated */
-	if (gpu_pg_profile->attr.attr.name)
-		kfree_const(gpu_pg_profile->attr.attr.name);
-
-	mutex_destroy(&gpu_pg_profile->lock);
-
-	if (gpu_pg_profile)
-		devm_kfree(&pdev->dev, gpu_pg_profile);
-
-	gpu_pg_profile = NULL;
+	devm_kfree(&pdev->dev, profiles);
+	gpu_pg_profile_drv_data->gpu_pg_profile = NULL;
 }
 
 static int gpu_static_pg_probe(struct platform_device *pdev)

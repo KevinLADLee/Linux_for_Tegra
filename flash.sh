@@ -2672,6 +2672,77 @@ function update_overlay_dtb() {
 	rm -f "${dts_file_updated}"
 }
 
+function generate_specs() {
+	# Build the base board spec and derive the compatible spec.
+	local derive_spec_script=""
+	local chip_id="${CHIPID:-}"
+	local generated_data=""
+	local spec_info_file=""
+
+	# Set board spec: BOARD_ID-FAB-BOARDSKU-BOARDREV-NV_PRODUCTION-CHIP_REV-BOARD_NAME-
+	spec="${BOARDID}-${FAB}-${BOARDSKU}-${BOARDREV}-${fuselevel_s}-${hwchiprev}-${ext_target_board}-";
+	echo "Info: spec=${spec}"
+
+	# Make sure spec length is less than maximum supported by BUP (128)
+	if ((${#spec} > MAX_SPEC_LEN)); then
+		echo "Error: spec length exceeds ${MAX_SPEC_LEN}, ${spec}(len=${#spec})"
+		exit 1
+	fi;
+
+	compatible_spec="${spec}"
+
+	if [ "${chip_id}" == "" ]; then
+		echo "Warning: Failed to generate compatible spec because CHIPID is not set, use ${spec} as compatible spec"
+		return 0
+	fi
+
+	if [ "${ROOTFS_DIR}" != "" ] && [ -d "${ROOTFS_DIR}" ]; then
+		derive_spec_script="${ROOTFS_DIR}/opt/nvidia/l4t-bootloader-config/nv-l4t-board-config.sh"
+	else
+		derive_spec_script="${LDK_DIR}/rootfs/opt/nvidia/l4t-bootloader-config/nv-l4t-board-config.sh"
+	fi
+	if [ ! -r "${derive_spec_script}" ]; then
+		echo "Error: The derive spec script ${derive_spec_script} is not found" >&2
+		echo "Warning: Failed to generate compatible spec, use ${spec} as compatible spec"
+		return 0
+	fi
+
+	spec_info_file="$(mktemp)" || {
+		echo "Warning: Failed to generate compatible spec, use ${spec} as compatible spec"
+		return 0
+	}
+
+	generated_data="$(
+		source "${derive_spec_script}"
+		chipid="${chip_id}"
+		compatible_spec=""
+		generate_compatible_spec_info "${spec}" > "${spec_info_file}"
+		ret=$?
+		if [ ${ret} -ne 0 ]; then
+			exit ${ret}
+		fi
+		printf "%s\n" "${compatible_spec}"
+	)"
+	ret=$?
+	if [ ${ret} -ne 0 ]; then
+		if [ -s "${spec_info_file}" ]; then
+			cat "${spec_info_file}" >&2
+		fi
+		rm -f "${spec_info_file}"
+		echo "Warning: Failed to generate compatible spec, use ${spec} as compatible spec"
+		return 0
+	fi
+	rm -f "${spec_info_file}"
+
+	if [ "${generated_data}" == "" ]; then
+		echo "Warning: Failed to generate compatible spec, use ${spec} as compatible spec"
+		compatible_spec="${spec}"
+		return 0
+	fi
+	compatible_spec="${generated_data}"
+	echo "Info: compatible_spec=${compatible_spec}"
+}
+
 function process_l4t_conf_dtbo() {
 	# Update the UEFI variables in L4TConfiguration.dtbo
 	local a_node=
@@ -2680,6 +2751,16 @@ function process_l4t_conf_dtbo() {
 	a_node=$( printf "= <0x%02x%02x%02x%02x>;" \
 		$(( (BSP_BRANCH>>8)&0xFF )) $(( BSP_BRANCH&0xFF )) $(( BSP_MAJOR&0xFF )) $(( BSP_MINOR&0xFF )) )
 	update_overlay_dtb "${L4T_CONF_DTBO}" "fmp-lowest-supported-version" "${a_node}" "uefi"
+
+	# Seed TegraPlatformSpec and TegraPlatformCompatSpec from the specs generated during flashing.
+	if [ -n "${spec}" ]; then
+		a_node="{data = \"${spec}\";runtime;non-volatile;};"
+		update_overlay_dtb "${L4T_CONF_DTBO}" "TegraPlatformSpec" "${a_node}"
+	fi
+	if [ -n "${compatible_spec}" ]; then
+		a_node="{data = \"${compatible_spec}\";runtime;non-volatile;};"
+		update_overlay_dtb "${L4T_CONF_DTBO}" "TegraPlatformCompatSpec" "${a_node}"
+	fi
 
 	# Update the value of "gNVIDIAPublicVariableGuid/RootsRedundancyLevel" if ROOTFS_AB is 1.
 	if [ "${rootfs_ab}" == 1 ]; then
@@ -2767,13 +2848,14 @@ function inject_board_spec_info() {
 	fi
 	sed -i '/TNSPEC/d' "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i "$ a TNSPEC ${spec}" "${rootfs_dir}/etc/nv_boot_control.conf";
+	sed -i '/COMPATIBLE_SPEC/d' "${rootfs_dir}/etc/nv_boot_control.conf";
+	sed -i "$ a COMPATIBLE_SPEC ${compatible_spec}" "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i '/TEGRA_CHIPID/d' "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i "$ a TEGRA_CHIPID ${CHIPID}" "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i '/TEGRA_OTA_BOOT_DEVICE/d' "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i "$ a TEGRA_OTA_BOOT_DEVICE ${ota_boot_dev}" "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i '/TEGRA_OTA_GPT_DEVICE/d' "${rootfs_dir}/etc/nv_boot_control.conf";
 	sed -i "$ a TEGRA_OTA_GPT_DEVICE ${ota_gpt_dev}" "${rootfs_dir}/etc/nv_boot_control.conf";
-
 }
 
 ### Function to convert semicolon-separated string to YAML sequence
@@ -3658,15 +3740,11 @@ else
 	fuselevel_s="1";
 fi;
 
-# Set board spec: BOARD_ID-FAB-BOARDSKU-BOARDREV-NV_PRODUCTION-CHIP_REV-BOARD_NAME-
-spec="${BOARDID}-${FAB}-${BOARDSKU}-${BOARDREV}-${fuselevel_s}-${hwchiprev}-${ext_target_board}-";
-# Make sure spec length is less than maximum supported by BUP (128)
 MAX_SPEC_LEN=128
-
-if ((${#spec} > ${MAX_SPEC_LEN})); then
-	echo "Error: spec length exceeds ${MAX_SPEC_LEN}, ${spec}(len=${#spec})"
-	exit 1
-fi;
+# Generate spec and compatible spec.
+spec=""
+compatible_spec=""
+generate_specs
 
 # get board SN and Part
 if [ ${_nvbrd_trk} -ne 0 ]; then

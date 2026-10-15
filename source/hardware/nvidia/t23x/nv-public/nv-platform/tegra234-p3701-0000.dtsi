@@ -3,7 +3,7 @@
 
 #include "tegra234-p3701-0000-prod-overlay.dtsi"
 #include "nv-soc/tegra234-soc-thermal.dtsi"
-#include "nv-soc/tegra234-soc-thermal-slowdown-cluster.dtsi"
+#include "nv-soc/tegra234-soc-thermal-slowdown.dtsi"
 #include "nv-soc/tegra234-soc-thermal-shutdown.dtsi"
 #include "nv-soc/tegra234-soc-thermal-trip-event.dtsi"
 

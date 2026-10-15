@@ -9,9 +9,9 @@ variables:
   START_TASK: ""
   INSTALL_NV_JP: "1" #enable install nvidia-jetpack by default
   BUILD_QSPI_IMG: "1" #enable image build for qspi flash by default
-  JETPACKVER: "7.2.0" # TODO: confirm exact JetPack version for L4T r39.2.0
-  JETSONVER: "39.2.0"
-  ROOTFS_NAME: "Tegra_Linux_Sample-Root-Filesystem_r39.2.0_aarch64.tbz2"
+  JETPACKVER: "7.2.0" # TODO: confirm exact JetPack version for L4T r39.2.1
+  JETSONVER: "39.2.1"
+  ROOTFS_NAME: "Tegra_Linux_Sample-Root-Filesystem_r39.2.1_aarch64.tbz2"
   UPDATE_DRV_DEPEND: "1"
   KCFLAGS: ""
   OTA_BASE_VER: "" # base BSP version of devices to be OTA-upgraded, e.g. R36-3/R36-4/R36-5; set when triggering the ota-payload job
@@ -187,7 +187,7 @@ stages:
   - mount --bind /proc ./rootfs/proc
   - cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
   - cp extra_scripts/rootfs_magic.sh rootfs
-  # freeze NVIDIA apt packages to the BSP version (L4T 39.2.0 + JP 7.2-b187)
+  # freeze NVIDIA apt packages to the BSP version (L4T 39.2.1 + JP 7.2.1-b49)
   - mkdir -p rootfs/etc/apt/preferences.d
   - cp extra_scripts/99-seeed-freeze-jp.pref rootfs/etc/apt/preferences.d/
   - cp extra_scripts/bluetooth-auto-trust_1.1-1.deb rootfs
@@ -334,7 +334,7 @@ stages:
   - mount --bind /proc ./rootfs/proc
   - cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
   - cp extra_scripts/rootfs_magic.sh rootfs
-  # freeze NVIDIA apt packages to the BSP version (L4T 39.2.0 + JP 7.2-b187)
+  # freeze NVIDIA apt packages to the BSP version (L4T 39.2.1 + JP 7.2.1-b49)
   - mkdir -p rootfs/etc/apt/preferences.d
   - cp extra_scripts/99-seeed-freeze-jp.pref rootfs/etc/apt/preferences.d/
   - cp extra_scripts/bluetooth-auto-trust_1.1-1.deb rootfs

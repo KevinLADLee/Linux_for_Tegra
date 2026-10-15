@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2009-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2009-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Handle allocation and freeing routines for nvmap
  */
@@ -138,7 +138,7 @@ int find_range_of_handles(struct nvmap_handle **hs, u32 nr,
 			return -EOVERFLOW;
 
 		tot_sz = sum;
-		if (offs > tot_sz) {
+		if (offs >= tot_sz) {
 			if (check_sub_overflow(hrange->offs_start, (u64)hs[i]->size, &difference))
 				return -EOVERFLOW;
 
@@ -1092,13 +1092,20 @@ int nvmap_assign_pages_to_handle(struct nvmap_client *client,
 	end = rng->sz;
 
 	for (i = rng->start; i <= rng->end; i++) {
+		/*
+		 * Room left in this handle from offset "start". Bounding
+		 * end_cur by (hs[i]->size - start) instead of hs[i]->size
+		 * prevents copying past the end of the source handle (and past
+		 * the destination pages[] array) when start > 0, i.e. for the
+		 * first handle of the range.
+		 */
 		if (check_sub_overflow((u64)hs[i]->size, start, &diff)) {
 			err = -EOVERFLOW;
 			nvmap_altfree(pages, nr_page * sizeof(*pages));
 			goto err_h;
 		}
 
-		end_cur = (end >= hs[i]->size) ? (diff) : end;
+		end_cur = (end >= diff) ? diff : end;
 		if (check_add_overflow(start, end_cur, &sum)) {
 			err = -EOVERFLOW;
 			nvmap_altfree(pages, nr_page * sizeof(*pages));
@@ -1110,7 +1117,7 @@ int nvmap_assign_pages_to_handle(struct nvmap_client *client,
 			nvmap_altfree(pages, nr_page * sizeof(*pages));
 			goto err_h;
 		}
-		end -= (hs[i]->size - start);
+		end -= end_cur;
 		start = 0;
 	}
 

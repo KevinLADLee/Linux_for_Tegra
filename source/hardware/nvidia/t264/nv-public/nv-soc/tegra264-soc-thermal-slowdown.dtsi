@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
 
 #include <dt-bindings/thermal/thermal.h>
 
@@ -39,14 +39,20 @@
 			cooling-maps {
 				map-cpufreq {
 					trip = <&cpu_sw_slowdown>;
-					/* CPU-pairs share the same clock-source */
 					cooling-device = <&cpu_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_8 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_9 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_10 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+							 <&cpu_11 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_13 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
 
 				map-throttle-alert {
@@ -68,14 +74,20 @@
 			cooling-maps {
 				map-cpufreq {
 					trip = <&gpu_sw_slowdown>;
-					/* CPU-pairs share the same clock-source */
 					cooling-device = <&cpu_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_8 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_9 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_10 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+							 <&cpu_11 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_13 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
 
 				map-throttle-alert {
@@ -97,14 +109,20 @@
 			cooling-maps {
 				map-cpufreq {
 					trip = <&soc012_sw_slowdown>;
-					/* CPU-pairs share the same clock-source */
 					cooling-device = <&cpu_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_8 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_9 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_10 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+							 <&cpu_11 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_13 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
 
 				map-throttle-alert {
@@ -126,14 +144,20 @@
 			cooling-maps {
 				map-cpufreq {
 					trip = <&soc345_sw_slowdown>;
-					/* CPU-pairs share the same clock-source */
 					cooling-device = <&cpu_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_4 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_5 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_6 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_7 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_8 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_9 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
 							 <&cpu_10 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+							 <&cpu_11 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_12 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+							 <&cpu_13 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
 
 				map-throttle-alert {
@@ -149,7 +173,15 @@
 	#cooling-cells = <2>;
 };
 
+&cpu_1 {
+	#cooling-cells = <2>;
+};
+
 &cpu_2 {
+	#cooling-cells = <2>;
+};
+
+&cpu_3 {
 	#cooling-cells = <2>;
 };
 
@@ -157,7 +189,15 @@
 	#cooling-cells = <2>;
 };
 
+&cpu_5 {
+	#cooling-cells = <2>;
+};
+
 &cpu_6 {
+	#cooling-cells = <2>;
+};
+
+&cpu_7 {
 	#cooling-cells = <2>;
 };
 
@@ -165,10 +205,22 @@
 	#cooling-cells = <2>;
 };
 
+&cpu_9 {
+	#cooling-cells = <2>;
+};
+
 &cpu_10 {
 	#cooling-cells = <2>;
 };
 
+&cpu_11 {
+	#cooling-cells = <2>;
+};
+
 &cpu_12 {
+	#cooling-cells = <2>;
+};
+
+&cpu_13 {
 	#cooling-cells = <2>;
 };

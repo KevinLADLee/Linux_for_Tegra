@@ -100,12 +100,6 @@ Where:
 - Use --external-only to flash only the external storage device.
   If you do not provide the "--external-only" option, the command will flash both internal and
   external storage devices.
-- Use --network <netargs> if you want the flash process to happen through Ethernet protocol
-  instead of USB protocol. Ethernet protocol is more reliable than USB protocol
-  for external devices like USB.
-  <netargs> can be "usb0" when flashing using ethernet protocol through the usb
-  flashing cable or "eth0:<target-ip>/<subnet>:<host-ip>" when flashing using
-  ethernet protocol through the RJ45 cable.
 - (Optional) Declare ADDITIONAL_DTB_OVERLAY_OPT=<opt> where <opt> can be BootOrderNvme.dtbo.
   This allows UEFI to prioritize booting from NVMe SSD. <opt> can also be BootOrderUsb.dtbo, which
   allows UEFI to prioritize booting from the USB storage drive
@@ -125,7 +119,7 @@ to generate the correct images.
 When a Jetson has both internal and external storage devices like Jetson AGX Orin, the initrd flash tool will flash the full root filesystem both on the external storage device and the internal storage device.
 If you dont want this to happen, please use the following command:
 
-sudo ADDITIONAL_DTB_OVERLAY_OPT="BootOrderNvme.dtbo" ./l4t_initrd_flash.sh --external-device nvme0n1p1 -c ./tools/kernel_flash/flash_l4t_external.xml --showlogs  jetson-agx-orin-devkit external
+sudo ADDITIONAL_DTB_OVERLAY_OPT="BootOrderNvme.dtbo" ./l4t_initrd_flash.sh --external-device nvme0n1p1 [ -c ./tools/kernel_flash/flash_l4t_t234_nvme.xml ] --showlogs  jetson-agx-orin-devkit external
 
 
 
@@ -162,7 +156,7 @@ Workflow 6: Initrd Massflash
 Initrd Massflash works with workflow 3,4,5. Initrd massflash also requires you to do the massflash
 in two steps.
 
-First, generate massflash package using options --no-flash and --massflash <x> and --network usb0
+First, generate massflash package using options --no-flash and --massflash <x>
 Where <x> is the highest possible number of devices to be flashed concurrently.
 
 Both online mode and offline mode are supported (Details can be seen in workflow 2).
@@ -171,28 +165,27 @@ capable of flashing 5 devices concurrently.
 
 For Orin:
 $ sudo BOARDID=<BOARDID> FAB=<FAB> BOARDSKU=<BOARDSKU> BOARDREV=<BOARDREV>
-./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --massflash 5 --network usb0 jetson-agx-orin-devkit mmcblk0p1
+./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --massflash 5 jetson-agx-orin-devkit mmcblk0p1
 
 For Thor:
 $ sudo BOARDID=<BOARDID> FAB=<FAB> BOARDSKU=<BOARDSKU> BOARDREV=<BOARDREV>
-./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --massflash 5 --network usb0 jetson-agx-thor-devkit mmcblk0p1
+./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --massflash 5 jetson-agx-thor-devkit internal
 
 (For the value of BOARDID, FAB, BOARDSKU and BOARDREV, please refer to the table at the bottom of this file.)
 
 
 Second,
 - Connect all 5 Jetson devices to the flashing hosts.
-(Make sure all devices are in exactly the same hardware revision similar to the requirement in
-README_Massflash.txt )
+(Make sure all devices are in exactly the same hardware revision)
 - Put all of connected Jetsons into RCM mode.
 - Run:
 
 For Orin
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --network usb0 jetson-agx-orin-devkit
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 jetson-agx-orin-devkit mmcblk0p1
 (Optionally add --showlogs to show all of the log)
 
 For Thor
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --network usb0 jetson-agx-thor-devkit
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 jetson-agx-thor-devkit internal
 (Optionally add --showlogs to show all of the log)
 
 Note:
@@ -206,13 +199,13 @@ Tips:
   massflash run faster:
 
   Massflash the first time.
-  $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --network usb0 --keep jetson-agx-orin-devkit
+  $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --keep jetson-agx-orin-devkit mmcblk0p1
 
   Massflash the second time.
-  $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --network usb0 --reuse jetson-agx-orin-devkit
+  $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --reuse jetson-agx-orin-devkit mmcblk0p1
 
 - Use ionice to make the flash process the highest I/O priority in the system.
-  $ sudo ionice -c 1 -n 0 ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --network usb0 --massflash 5 jetson-agx-orin-devkit
+  $ sudo ionice -c 1 -n 0 ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 jetson-agx-orin-devkit mmcblk0p1
 
 
 
@@ -244,17 +237,16 @@ $ sudo tar xpfv mfi_<target-board>.tar.gz
 
 Second, perform this procedure:
 - Connect the Jetson devices to the flashing hosts.
-  (Make sure all devices are in exactly the same hardware revision similar to
-  the requirement in README_Massflash.txt )
+  (Make sure all devices are in exactly the same hardware revision)
 - Put all of connected Jetsons into RCM mode.
 - Run:
 $ cd mfi_<target-board>
 For Orin
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --network usb0 jetson-agx-orin-devkit
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 jetson-agx-orin-devkit internal
 (Optionally add --showlogs to show all of the log)
 
 For Thor
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 --network usb0 jetson-agx-thor-devkit
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 5 jetson-agx-thor-devkit internal
 (Optionally add --showlogs to show all of the log)
 
 
@@ -272,14 +264,14 @@ partition based on the partition label specified in the index file.
 
 Examples:
 For flashing eks partition on internal device:
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh -k eks jetson-agx-thor-devkit internal
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh -k A_eks jetson-agx-thor-devkit internal
 
 
-For flashing kernel-dtb partition on external device:
+For flashing APP partition on external device:
 $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh \
   --external-device nvme0n1p1 \
-  -c ./tools/kernel_flash/flash_l4t_external.xml \
-  -k kernel-dtb --external-only jetson-agx-thor-devkit internal
+  -c ./tools/kernel_flash/flash_l4t_t264_nvme.xml \
+  -k APP --external-only jetson-agx-thor-devkit internal
 
 
 Workflow 9: Disk encryption support on external device
@@ -296,7 +288,7 @@ $ sudo ROOTFS_ENC=1 ./tools/kernel_flash/l4t_initrd_flash.sh --external-device <
 Where:
 - all the parameters are the same as above.
 - <external-partition-layout> is the external storage partition layout containing
-APP, APP_ENC and UDA encrypted partition. In this folder, flash_l4t_nvme_rootfs_enc.xml
+APP, APP_ENC and UDA encrypted partition. In this folder, flash_l4t_t264_nvme_rootfs_enc.xml
 is provided as an example.
 
 
@@ -325,18 +317,18 @@ $ sudo BOARDID=3701 BOARDSKU=0004 FAB=000 ./tools/kernel_flash/l4t_initrd_flash.
 filesystem for the external device:
 $ sudo ROOTFS_ENC=1 ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash \
             --external-device nvme0n1p1 \
-            -c ./tools/kernel_flash/flash_l4t_nvme_rootfs_enc.xml \
+            -c ./tools/kernel_flash/flash_l4t_t234_nvme_rootfs_enc.xml \
             --external-only --append jetson-agx-orin-devkit external
 (Or if you want to generate the image offline, then you can use:
 $ sudo BOARDID=3701 BOARDSKU=0004 FAB=000 ROOTFS_ENC=1 CHIP_SKU="00:00:00:D0" ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash \
             --external-device nvme0n1p1 \
-            -c ./tools/kernel_flash/flash_l4t_nvme_rootfs_enc.xml \
+            -c ./tools/kernel_flash/flash_l4t_t234_nvme_rootfs_enc.xml \
             --external-only --append jetson-agx-orin-devkit external
 )
 
 
 3. Put the device into recovery mode, then flash both images:
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only jetson-agx-orin-devkit
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only jetson-agx-orin-devkit external
 
 
 Example 2: In this example, you want to boot Jetson Orin Nano from an
@@ -351,11 +343,11 @@ $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash --reuse jetson-orin-n
 filesystem for the external device:
 $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash \
             --external-device nvme0n1p1 \
-            -c ./tools/kernel_flash/flash_l4t_external.xml \
+            -c ./tools/kernel_flash/flash_l4t_t234_nvme.xml \
             --external-only --append jetson-orin-nano-devkit external
 
 3. Put the device into recovery mode, then flash both images:
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only jetson-orin-nano-devkit external
 
 
 Example 3: we create a massflash package with encrypted internal image and
@@ -371,11 +363,11 @@ flashing two devices simultaneously:
 
 $ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash \
             --external-device nvme0n1p1 \
-            -c ./tools/kernel_flash/flash_l4t_external.xml \
+            -c ./tools/kernel_flash/flash_l4t_t234_nvme.xml \
             --external-only --massflash 2 --append jetson-orin-nano-devkit external
 
 3. Put two devices into recovery mode, then flash two devices:
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 2 jetson-orin-nano-devkit
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only --massflash 2 jetson-orin-nano-devkit external
 
 
 Example 4: Generate an encrypted root filesystem configuration for the internal device
@@ -389,11 +381,11 @@ Second step: Put the device into recovery mode, then generate an encrypted
 filesystem for the external device:
 $ sudo ROOTFS_ENC=1 ./tools/kernel_flash/l4t_initrd_flash.sh --no-flash \
             --external-device nvme0n1p1 \
-            -c ./tools/kernel_flash/flash_l4t_nvme_rootfs_enc.xml \
+            -c ./tools/kernel_flash/flash_l4t_t234_nvme_rootfs_enc.xml \
             --external-only --append jetson-agx-orin-devkit external
 
 Third step: Put the device into recovery mode, then flash both images:
-$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only
+$ sudo ./tools/kernel_flash/l4t_initrd_flash.sh --flash-only jetson-agx-orin-devkit external
 
 Workflow 11: Manually generate a bootable external storage device:
 

@@ -1,0 +1,16 @@
+# Generated files and per-device data must not enter the source fork.
+/rootfs/*
+!/rootfs/README.txt
+/source/kernel_out/
+/tools/kernel_flash/images/
+/tools/kernel_flash/tmp/
+/initrdlog/
+/bootloader/system.img*
+/bootloader/esp.img*
+/bootloader/boot?.img
+/bootloader/cvm.bin
+/bootloader/cvb.bin
+/bootloader/chip_info.bin*
+/bootloader/rcm_*
+/headless-profile.json
+*.log
